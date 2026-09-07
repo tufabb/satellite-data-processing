@@ -183,7 +183,7 @@ var submitButton = ui.Button({
       scale: 10,
       maxPixels: 1e9
     }).evaluate(function(statistici) {
-      print('Interval NDCI folosit:', statistici.NDCI_min, ':', statistici.NDCI_max,startDate);
+      print('Interval NDCI folosit:', statistici.NDCI_min, ':', statistici.NDCI_max);
       print('Interval NDTI folosit:', statistici.NDTI_min, ':', statistici.NDTI_max);
     });
 
