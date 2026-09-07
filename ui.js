@@ -4,10 +4,11 @@ var clickedPoints=[];
 var layerPoints=[];
 var lakeLayer=[];
 var now=ee.Date(Date.now());
-var endDate=now.format('YYYY-MM-dd').getInfo();
-var startDate=service.aWeekAgo(endDate);
+var defaultEndDate=now.format('YYYY-MM-dd').getInfo();
+var defaultStartDate=service.aWeekAgo(defaultEndDate);
 var ok=0;
-
+var endDateBox;
+var startDateBox;
 
 
 /**
@@ -73,43 +74,29 @@ function setPoint(coords)
     
   }
 }
-/**
- */
-function StartDate()
-{
-  var startDateBox = ui.Textbox({
-    placeholder: "YYYY-MM-DD",
-    value: startDate,
-    style:{
-      width: "40%"
-    }
-    
-  });
-  return startDateBox;
-}
-/**
- */
-function EndDate()
-{
-    var endDateBox = ui.Textbox({
-    placeholder: "YYYY-MM-DD",
-    value: endDate,
-    style:{
-      width: "40%"
-    }
-  });
-  return endDateBox;
-}
-
 
 
 /**
  */
 function DatePanel()
 {
-   
-  var startDateBox= StartDate();
-  var endDateBox=EndDate();
+   startDateBox = ui.Textbox({
+    placeholder: "YYYY-MM-DD",
+    value: defaultStartDate,
+    style:{
+      width: "40%"
+    }
+    
+  });
+  
+    endDateBox = ui.Textbox({
+    placeholder: "YYYY-MM-DD",
+    value: defaultEndDate,
+    style:{
+      width: "40%"
+    }
+  });
+ 
   
     var timerangePanel = ui.Panel({
     layout: ui.Panel.Layout.flow('horizontal')
@@ -138,8 +125,7 @@ function setupPanel(){
   var timerangePanel= DatePanel();
   var undoButton=UNDOButton();
   var resetButton=RESETButton();
-  var startDateBox= StartDate();
-  var endDateBox=EndDate();
+
   
    panel.add(ui.Label({
     value:
@@ -156,6 +142,7 @@ var submitButton = ui.Button({
     onClick: function() {
       if (clickedPoints.length === 4) {
         if (lakeLayer.length > 0) {
+
       lakeLayer.forEach(function(layer) { Map.layers().remove(layer); });
       lakeLayer = [];
       }
@@ -182,7 +169,8 @@ var submitButton = ui.Button({
  function processRegion()
  {
      var zona=ee.Geometry.Polygon(clickedPoints);
-     
+     var startDate= startDateBox.getValue();
+     var endDate= endDateBox.getValue();
      var ndti=service.NDTI(zona,startDate,endDate);
      var ndci=service.NDCI(zona,startDate,endDate);
      
@@ -195,7 +183,7 @@ var submitButton = ui.Button({
       scale: 10,
       maxPixels: 1e9
     }).evaluate(function(statistici) {
-      print('Interval NDCI folosit:', statistici.NDCI_min, ':', statistici.NDCI_max);
+      print('Interval NDCI folosit:', statistici.NDCI_min, ':', statistici.NDCI_max,startDate);
       print('Interval NDTI folosit:', statistici.NDTI_min, ':', statistici.NDTI_max);
     });
 
