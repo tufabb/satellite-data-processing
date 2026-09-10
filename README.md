@@ -28,7 +28,7 @@ The app uses data from **NASA's Harmonized Landsat and Sentinel-2** (HLS) projec
 
 The lakes are extracted via the *Modified Normalized Difference Water Index* (**MNDWI**), which can be used to detect the water pixels.
 
-Evaluating a lake can lead to one of results, classified by color:
+Evaluating a lake can lead to one of 4 results, classified by color:
 - 🟩 **GREEN**: the state of the lake **has improved**, the indexes have considerably lower values compared to the previous week;
 - 🟨 **YELLOW**: the state of the lake is mostly **unchanged** to that of the last week;
 - 🟥 **RED**: the state of the lake **has worsened**, as the indices have considerably higher values compared to the previous week - this may signify an anomaly, such as an algal bloom or a sediment plume.
