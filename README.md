@@ -1,6 +1,6 @@
 <h1 align="center">
   <a href="https://github.com/tufabb/satellite-data-processing">
-    <img src="img/logo.png" alt="Satelac">
+    <img src="img/logo.png" width="50%" height="50%" alt="Satelac">
   </a>
 </h1>
 
