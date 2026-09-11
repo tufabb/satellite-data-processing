@@ -1,3 +1,2 @@
-
-var UI= require('users/elenasimabb/Danube_Delta_OBS:UI');
+var UI = require('users/monicadima241627/satellite:panel');
 UI.startt();
