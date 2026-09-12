@@ -18,7 +18,8 @@ Functionalities include being able to:
 - Check the status of a manually selected lake across the last 30 days before a specified date;
 - Check the status of a manually selected lake compared to the last year, same season;
 - Visualize the lake's _NDCI_, _NDTI_ and _CDOM_ values and inspect which parts of the water body are more affected;
-- Automatically select most lakes in a Romanian County to analyze and evaluate their recent evolution, flagging the appearance of possible problems;
+- Generate a timelapse of the indices of a lake across 30 days or an entire season;
+- Automatically select most lakes in a Romanian County to analyze and evaluate their recent evolution, flagging the appearance of possible problems.
 
 ## Indices
 SATELAC uses remote sensing to monitor the *Normalized Difference Chlorophyll Index* (**NDCI**), the *Normalized Difference Turbidity Index* (**NDTI**) and the *Colored Dissolved Organic Mater* (**CDOM**) for a time series. These can be treated as indicators for certain events that can impact water quality, like algal blooms or sediment plumes. A more in-depth explanation, as well as sources, can be found in the **<a href="https://docs.google.com/document/d/1oqhylmwxvWNdqpimZDChHtjaqnGKMM7P9XnF26lBTM4/edit?usp=sharing">report</a>**. The lakes are extracted via the *Modified Normalized Difference Water Index* (**MNDWI**), which can be used to detect the water pixels.
@@ -33,6 +34,8 @@ There are 2 main sections. The first section consists of monitoring the lakes in
 - If the user wants to see an analysis over the **last 30-days**, a chart with the evolution of the NDCI, NDTI and CDOM values over the last 30-days before the date selected will be generated;
 - If the user wants to see a **seasonal analysis**, the season of the date chosen will be compared with the previous year. Four charts will be generated: one that shows the evolution of the three indices over the season selected, and 3 separate ones for each index, where the data points are either from the same season or from the previous year. A score will be computed from each and be visible along with the charts. The interpretation can be found in the Result Interpretation part below;  
 - If the user wants to see an analysis **around the date specified**, dates from the last 7 days before the date selected will be used to generate data points that are plotted on a single graph, similarly to the 30-day analysis.
+<br>
+For the seasonal and the 30-day analyses, the user has the option to generate a timelapse, which makes it easier to see how the quality of the lake progresses in terms of NDCI, NDTI and CDOM.
 
 
 ## Result Interpretation
