@@ -131,6 +131,8 @@ function NDCI(s2, conturMask) {
 /**
  * CDOM (proxy materie organică dizolvată) NU E NORMALISEZ DIFF DE BENZI SPECTRALE, e un raport
  * nu există o formulă standard universală pentru acest indice!!!
+ * raport B3/B4 (verde/roșu) - corelație mai bună cu CDOM real decât vechiul B2/B3, conform literaturii
+ * (ex. Lake Huron, lacuri nordice) - B2/B3 iese constant slab corelat
  */
 function CDOM(s2, conturMask) {
   return calculIndici(s2).select('CDOM').updateMask(conturMask);
@@ -154,13 +156,17 @@ function NDCIvis() {
 }
 
 /**
- * Paletă CDOM - interval îngustat la 0.75-1.05 unde chiar
- * se afla majoritatea pixelilor reali B2/B3
- * intervalul vechi era prea mare si toate lacurile aveau aceeași culoare
+ * Paletă CDOM
+ * ATENTIE: min/max de mai jos (0.75-1.05) au fost calibrate empiric pentru vechiul
+ * raport B2/B3 (unde chiar se afla majoritatea pixelilor reali)
+ * dupa trecerea la B3/B4 intervalul de valori reale se muta (B3/B4 tinde sa fie >1,
+ * de obicei in jur de 1.2-2.5+ pentru ape, spre deosebire de B2/B3 care statea in jur de 1)
+ * TREBUIE re-calibrat pe date reale B3/B4 din zona voastra, altfel harta poate iesi
+ * fie toata aceeasi culoare, fie fara contrast - la fel cum a fost nevoie de calibrare si pt B2/B3
  */
 function CDOMvis() {
   return {
-    min: 0.75, max: 1.05,
+    min: 0.75, max: 1.05, // TODO: recalibrat pt B3/B4 - vezi comentariul de mai sus
     palette: ['0000ff', '00ffff', '00ff00', 'ffff00', 'ff8000', '7f0000']
   };
 }
@@ -177,6 +183,7 @@ function imagineSatelit(zona, startDate, endDate) {
 // limita superioara acceptata care determina verde/galben/rosu ca indicator de lacuri pe judet
 var NDTI_TURBIDITY_THRESHOLD = 0.05;
 var NDCI_ALGAE_THRESHOLD = 0.05;
+// ATENTIE: prag calibrat empiric pentru vechiul raport B2/B3 - de recalibrat pt B3/B4 (vezi CDOMvis)
 var CDOM_HIGH_THRESHOLD = 1.05;
 
 // definiții de sezon 
@@ -254,7 +261,7 @@ function mozaicPutinInorat(zona, startDate, endDate) {
 function calculIndici(image) {
   var ndci = image.normalizedDifference(['B5', 'B4']).rename('NDCI');
   var ndti = image.normalizedDifference(['B4', 'B3']).rename('NDTI');
-  var cdom = image.select('B2').divide(image.select('B3')).rename('CDOM');
+  var cdom = image.select('B3').divide(image.select('B4')).rename('CDOM');
   return ndci.addBands(ndti).addBands(cdom);
 }
 
