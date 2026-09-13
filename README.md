@@ -7,7 +7,7 @@
 <div align = "center">This repository contains the source code for **SATELAC**, an app that can be used to monitor the water quality of lakes. The project was developed as part of the <a href="https://github.com/Romanian-Space-Initiative"> ROSPIN Summer School</a>.</div> <br><br><br>
 
 ## How to run
-You can access the app on the following page: https://bit.ly/4rt6F7r
+You can access the app on the following page: https://shorturl.at/m88OR
 
 
 
