@@ -157,16 +157,21 @@ function NDCIvis() {
 
 /**
  * Paletă CDOM
- * ATENTIE: min/max de mai jos (0.75-1.05) au fost calibrate empiric pentru vechiul
- * raport B2/B3 (unde chiar se afla majoritatea pixelilor reali)
- * dupa trecerea la B3/B4 intervalul de valori reale se muta (B3/B4 tinde sa fie >1,
- * de obicei in jur de 1.2-2.5+ pentru ape, spre deosebire de B2/B3 care statea in jur de 1)
- * TREBUIE re-calibrat pe date reale B3/B4 din zona voastra, altfel harta poate iesi
- * fie toata aceeasi culoare, fie fara contrast - la fel cum a fost nevoie de calibrare si pt B2/B3
+ * min/max de mai jos sunt o ESTIMARE de pornire pentru raportul B3/B4 (verde/roșu),
+ * NU o calibrare empirică pe datele voastre (spre deosebire de vechiul 0.75-1.05,
+ * care chiar fusese calibrat pe distribuția reală a pixelilor B2/B3).
+ * Literatura de specialitate (Sentinel-2, lacuri) arată B3/B4 tipic in jur de
+ * 1.2-2.5+ pentru ape, deci am pornit de la un interval 1.0-1.8 ca sa acopere
+ * partea de jos a acelui interval - dar TREBUIE verificat/ajustat pe pixelii
+ * reali din zona voastra (ex. print la min/max gasit pe cateva lacuri cunoscute).
+ * Notă: harta si timelapse-ul CDOM din ui.js NU mai folosesc de fapt acest min/max -
+ * calculeaza dinamic intervalul real din pixelii afisati (vezi redeseneazaIndiciPeHarta
+ * si genereazaTimelapse). Valorile de mai jos raman relevante doar ca fallback (daca
+ * acel calcul dinamic eșuează) si ca sursa pentru CDOM_HIGH_THRESHOLD de mai jos.
  */
 function CDOMvis() {
   return {
-    min: 0.75, max: 1.05, // TODO: recalibrat pt B3/B4 - vezi comentariul de mai sus
+    min: 1.0, max: 1.8, // TODO: estimare de pornire, de validat pe date reale - vezi comentariul de mai sus
     palette: ['0000ff', '00ffff', '00ff00', 'ffff00', 'ff8000', '7f0000']
   };
 }
@@ -183,8 +188,10 @@ function imagineSatelit(zona, startDate, endDate) {
 // limita superioara acceptata care determina verde/galben/rosu ca indicator de lacuri pe judet
 var NDTI_TURBIDITY_THRESHOLD = 0.05;
 var NDCI_ALGAE_THRESHOLD = 0.05;
-// ATENTIE: prag calibrat empiric pentru vechiul raport B2/B3 - de recalibrat pt B3/B4 (vezi CDOMvis)
-var CDOM_HIGH_THRESHOLD = 1.05;
+// ATENTIE: estimare de pornire pentru B3/B4 (nu calibrare empirica) - vezi comentariul din CDOMvis.
+// Ales egal cu CDOMvis().max (aceeasi conventie ca la vechiul B2/B3: "ridicat" = capatul de sus
+// al intervalului tipic asteptat). De recalibrat cand aveti date reale de la lacuri cunoscute.
+var CDOM_HIGH_THRESHOLD = 1.8;
 
 // definiții de sezon 
 var SEZOANE = {
@@ -396,18 +403,18 @@ function interpolateColor(t) {
  * ex:
  * NDTI_TURBIDITY_THRESHOLD = 0.05
  * NDCI_ALGAE_THRESHOLD    = 0.05
- * CDOM_HIGH_THRESHOLD     = 1.05
+ * CDOM_HIGH_THRESHOLD     = 1.8
  * 
  * scor_vechi de la sapt anterioara
  * NDTI = 0.08   (0.08 > 0.05  depășește pragul deci +1)
  * NDCI = 0.02   (0.02 < 0.05  nu depășește deci +0)
- * CDOM = 1.10   (1.10 > 1.05  depășește pragul deci +1)
+ * CDOM = 1.90   (1.90 > 1.8   depășește pragul deci +1)
  * deci scor_vechi = +2
  * 
  * scor_nou in sapt curenta
  * NDTI = 0.03   (0.03 < 0.05  deci +0)
  * NDCI = 0.02   (0.02 < 0.05  deci +0)
- * CDOM = 1.00   (1.00 < 1.05  deci +0)
+ * CDOM = 1.50   (1.50 < 1.8   deci +0)
  * scor_nou = 0
  * 
  * delta = 0-2=-2 negativ, imbunatatire

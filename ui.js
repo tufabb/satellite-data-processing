@@ -860,6 +860,8 @@ function redeseneazaIndiciPeHarta() {
   }
 
   indiciBifati.forEach(function(cheie) {
+    if (cheie === 'CDOM') return; // CDOM nu are un interval fix universal (vezi CDOMvis) - stratul lui
+                                   // e adaugat mai jos, cu min/max calculate din pixelii reali ai zonei
     var info = INDICI_INFO[cheie];
     var imagineIndice = info.compute(imagineSatelit, contur);
     var layer = ui.Map.Layer(imagineIndice, info.vis(), info.label);
@@ -884,6 +886,18 @@ function redeseneazaIndiciPeHarta() {
     tileScale: 4
   }).evaluate(function(statistici) {
     if (!statistici || statistici.NDCI_min === undefined || statistici.NDCI_min === null) return;
+
+    // stratul CDOM de pe hartă: min/max NU sunt fixe (CDOMvis().min/max), ci exact
+    // intervalul real gasit acum in zona (statistici.CDOM_min/max) - altfel, cu un
+    // raport B3/B4 tipic peste pragul fix vechi, toata zona iese saturata intr-o
+    // singura culoare (vezi comentariul din CDOMvis din service.js)
+    if (indiciCheckboxState.cdom && statistici.CDOM_min != null && statistici.CDOM_max != null) {
+      var cdomMin = statistici.CDOM_min, cdomMax = statistici.CDOM_max;
+      if (cdomMax - cdomMin < 0.001) { cdomMin -= 0.05; cdomMax += 0.05; } // zona aproape uniforma - evita min===max
+      var cdomLayer = ui.Map.Layer(cdom, {min: cdomMin, max: cdomMax, palette: cdomVis.palette}, 'CDOM');
+      lakeLayer.push(cdomLayer);
+      Map.layers().add(cdomLayer);
+    }
 
     if (currentLegendPanel) { Map.remove(currentLegendPanel); currentLegendPanel = null; }
     var legendContainer = ui.Panel({style: {position: 'bottom-left', padding: '10px', backgroundColor: 'rgba(255,255,255,0.9)'}});
@@ -1038,42 +1052,67 @@ function genereazaTimelapse(cheieIndice, zona, contur, startDate, endDate) {
     }
 
     var regiune = zona.bounds();
-    var videoParams = {
-      dimensions: 360,
-      region: regiune,
-      framesPerSecond: 2,
-      min: vis.min,
-      max: vis.max,
-      palette: vis.palette,
-      crs: 'EPSG:3857'
-    };
 
-    var thumb = ui.Thumbnail({
-      image: serieFiltrata.select(cheieIndice),
-      params: videoParams,
-      style: {position: 'bottom-right', margin: '4px'},
-      onClick: null
-    });
+    function construiesteThumbnail(visMinMax) {
+      var videoParams = {
+        dimensions: 360,
+        region: regiune,
+        framesPerSecond: 2,
+        min: visMinMax.min,
+        max: visMinMax.max,
+        palette: vis.palette,
+        crs: 'EPSG:3857'
+      };
 
-    var container = ui.Panel({
-      widgets: [
-        ui.Label('Timelapse pentru ' + info.label, {
-          fontSize: '13px', fontWeight: 'bold', color: '#222222',
-          margin: '2px 4px 4px 4px'
-        }),
-        thumb
-      ],
-      style: {
-        position: 'bottom-right', padding: '6px',
-        backgroundColor: 'rgba(255,255,255,0.95)'
-      }
-    });
+      var thumb = ui.Thumbnail({
+        image: serieFiltrata.select(cheieIndice),
+        params: videoParams,
+        style: {position: 'bottom-right', margin: '4px'},
+        onClick: null
+      });
 
-    if (cerereCurenta !== timelapseRequestId) return; // verificat din nou dupa constructia thumbnail-ului, inainte sa il afisam
+      var container = ui.Panel({
+        widgets: [
+          ui.Label('Timelapse pentru ' + info.label, {
+            fontSize: '13px', fontWeight: 'bold', color: '#222222',
+            margin: '2px 4px 4px 4px'
+          }),
+          thumb
+        ],
+        style: {
+          position: 'bottom-right', padding: '6px',
+          backgroundColor: 'rgba(255,255,255,0.95)'
+        }
+      });
 
-    Map.add(container);
-    timelapseThumbnails.push(container);
-    setStatus(statusLabelAnaliza, 'Timelapse ' + cheieIndice + ' generat.', statusSpinnerAnaliza);
+      if (cerereCurenta !== timelapseRequestId) return; // verificat din nou dupa constructia thumbnail-ului, inainte sa il afisam
+
+      Map.add(container);
+      timelapseThumbnails.push(container);
+      setStatus(statusLabelAnaliza, 'Timelapse ' + cheieIndice + ' generat.', statusSpinnerAnaliza);
+    }
+
+    if (cheieIndice === 'CDOM') {
+      // CDOM nu are un interval fix universal (vezi comentariul din CDOMvis, service.js) - calculam
+      // min/max real pe toata perioada animatiei, altfel (cu vis.min/max fix) tot GIF-ul poate iesi
+      // intr-o singura culoare saturata daca valorile reale B3/B4 sunt sistematic peste vechiul prag
+      serieFiltrata.select(cheieIndice).reduce(ee.Reducer.minMax()).reduceRegion({
+        reducer: ee.Reducer.minMax(),
+        geometry: zona,
+        scale: 10,
+        maxPixels: 1e9,
+        bestEffort: true,
+        tileScale: 4
+      }).evaluate(function(statistici, errStat) {
+        if (cerereCurenta !== timelapseRequestId) return;
+        var minReal = (!errStat && statistici && statistici.CDOM_min_min != null) ? statistici.CDOM_min_min : vis.min;
+        var maxReal = (!errStat && statistici && statistici.CDOM_max_max != null) ? statistici.CDOM_max_max : vis.max;
+        if (maxReal - minReal < 0.001) { minReal -= 0.05; maxReal += 0.05; } // perioada aproape uniforma - evita min===max
+        construiesteThumbnail({min: minReal, max: maxReal});
+      });
+    } else {
+      construiesteThumbnail({min: vis.min, max: vis.max});
+    }
   });
 }
 
